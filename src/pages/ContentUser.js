@@ -14,6 +14,9 @@ import FirstPageIcon from '@material-ui/icons/FirstPage';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import Build from '@material-ui/icons/Build';
+import Fab from '@material-ui/core/Fab';
 
 const useStyles1 = makeStyles((theme) => ({
   root: {
@@ -213,6 +216,15 @@ export default function CustomPaginationActionsTable() {
   const classes = useStyles2();
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [activeRow, setActiveRow] = React.useState({
+    id: '', 
+    date: '', 
+    name: '', 
+    shipTo: '', 
+    paymentMethod: '', 
+    amount: '',
+  })
+
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - (page - 1) * rowsPerPage);
 
@@ -231,7 +243,8 @@ export default function CustomPaginationActionsTable() {
                 <TableCell>Name</TableCell>
                 <TableCell>Ship To</TableCell>
                 <TableCell>Payment Method</TableCell>
-                <TableCell align="right">Sale Amount</TableCell>
+                <TableCell>Sale Amount</TableCell>
+                <TableCell align="right">Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -244,7 +257,27 @@ export default function CustomPaginationActionsTable() {
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.shipTo}</TableCell>
                   <TableCell>{row.paymentMethod}</TableCell>
-                  <TableCell align="right">{`$${row.amount}`}</TableCell>
+                  <TableCell>{`$${row.amount}`}</TableCell>
+                  <TableCell align="right">
+                    <Fab
+                      size="small"
+                      color="red"
+                      aria-label="add"
+                      style={{ color: "white", backgroundColor: "red", boxShadow: "none", width: 36, height: 36 }}
+                      onClick={async () => {
+                        await setActiveRow({
+                          id: row.id,
+                          name: row.name,
+                          shipTo: row.shipTo,
+                          paymentMethod: row.paymentMethod,
+                          amount: row.amount,
+                        })
+                        await console.log(activeRow)
+                      }}
+                      >
+                      <Remove />
+                    </Fab>
+                  </TableCell>
                 </TableRow>
               ))}
 
