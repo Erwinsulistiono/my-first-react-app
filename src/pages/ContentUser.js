@@ -232,6 +232,8 @@ export default function CustomPaginationActionsTable() {
     setPage(newPage);
   };
 
+  console.log('active row :', activeRow)
+
   return (
     <React.Fragment>
       <Paper className={classes.table}>
@@ -264,15 +266,14 @@ export default function CustomPaginationActionsTable() {
                       color="red"
                       aria-label="add"
                       style={{ color: "white", backgroundColor: "red", boxShadow: "none", width: 36, height: 36 }}
-                      onClick={async () => {
-                        await setActiveRow({
+                      onClick={() => {
+                        setActiveRow({
                           id: row.id,
                           name: row.name,
                           shipTo: row.shipTo,
                           paymentMethod: row.paymentMethod,
                           amount: row.amount,
                         })
-                        await console.log(activeRow)
                       }}
                       >
                       <Remove />

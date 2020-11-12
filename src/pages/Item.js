@@ -174,6 +174,10 @@ const useStyles = makeStyles((theme) => ({
 export default function Dashboard() {
     const classes = useStyles();
     const [open, setOpen] = React.useState(true);
+    const handleOpen = () => {
+        setOpen(true);
+    };
+    
     const handleDrawer = () => {
         setOpen(!open);
     };
@@ -242,7 +246,9 @@ export default function Dashboard() {
                         <div className={classes.title} />
                         <IconButton color="inherit">
                             <Fab color="secondary" aria-label="add" className={classes.fabButton}>
-                                <AddIcon />
+                                <AddIcon 
+                                onClick={handleOpen}
+                                />
                             </Fab>
                         </IconButton>
                     </Toolbar>

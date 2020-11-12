@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -9,11 +8,6 @@ import TableContainer from '@material-ui/core/TableContainer';
 import Pagination from '@material-ui/lab/Pagination';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
-import FirstPageIcon from '@material-ui/icons/FirstPage';
-import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
-import LastPageIcon from '@material-ui/icons/LastPage';
 import axios from 'axios';
 import Remove from '@material-ui/icons/Remove';
 import Build from '@material-ui/icons/Build';
@@ -27,10 +21,11 @@ import {
   InputLabel,
   Input,
   Button,
-  TextField,
   Card,
   CardActions
 } from "@material-ui/core";
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 
 const useStyles1 = makeStyles((theme) => ({
   root: {
@@ -39,64 +34,19 @@ const useStyles1 = makeStyles((theme) => ({
   },
 }));
 
-function TablePaginationActions(props) {
-  const classes = useStyles1();
-  const theme = useTheme();
-  const { count, page, rowsPerPage, onChangePage } = props;
-
-  const handleFirstPageButtonClick = (event) => {
-    onChangePage(event, 1);
-  };
-
-  const handleBackButtonClick = (event) => {
-    onChangePage(event, page - 1);
-  };
-
-  const handleNextButtonClick = (event) => {
-    onChangePage(event, page + 1);
-  };
-
-  const handleLastPageButtonClick = (event) => {
-    onChangePage(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
-  };
-
-  return (
-    <div className={classes.root}>
-      <IconButton
-        onClick={handleFirstPageButtonClick}
-        disabled={page === 1}
-        aria-label="first page"
-      >
-        {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
-      </IconButton>
-      <IconButton onClick={handleBackButtonClick} disabled={page === 1} aria-label="previous page">
-        {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
-      </IconButton>
-
-      <IconButton
-        onClick={handleNextButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
-      >
-        {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
-      </IconButton>
-      <IconButton
-        onClick={handleLastPageButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
-      >
-        {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
-      </IconButton>
-    </div>
-  );
-}
-
-TablePaginationActions.propTypes = {
-  count: PropTypes.number.isRequired,
-  onChangePage: PropTypes.func.isRequired,
-  page: PropTypes.number.isRequired,
-  rowsPerPage: PropTypes.number.isRequired,
-};
+const useStylesModal = makeStyles(theme => ({
+  modal: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+  paper: {
+      backgroundColor: theme.palette.background.paper,
+      border: '2px solid #000',
+      boxShadow: theme.shadows[5],
+      padding: 0,
+  },
+}));
 
 const useStyles2 = makeStyles({
   table: {
@@ -131,6 +81,13 @@ const useStyles2 = makeStyles({
 export default function CustomPaginationActionsTable() {
   const rowsPerPage = 5;
   const [items, setItems] = useState([])
+  const [categories, setCategories] = useState([])
+  const [activeRow, setActiveRow] = React.useState({
+    id: '',
+    code: '',
+    category: '',
+    description: '',
+  })
 
   useEffect(() => {
     axios.get("http://localhost:8080/api/items", {
@@ -139,7 +96,6 @@ export default function CustomPaginationActionsTable() {
       }
     })
       .then(res => {
-        console.log(res.data)
         setItems(res.data)
       })
       .catch(err => {
@@ -147,27 +103,40 @@ export default function CustomPaginationActionsTable() {
       })
   }, [])
 
-  const classes = useStyles2();
-  const [modal, setModal] = React.useState(false)
-  const [page, setPage] = React.useState(1);
-  const [activeRow, setActiveRow] = React.useState({
-    id: '',
-    code: '',
-    category: '',
-  })
+  useEffect(() => {
+    axios.get("http://localhost:8080/api/categories", {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        console.log(res.data)
+        setCategories(res.data)
+      })
+      .catch(err => {
+        alert("Failed Fetching Data")
+      })
+  }, [])
 
+  const classes = useStyles2();
+  const classesModal = useStylesModal();
+  const [page, setPage] = React.useState(1);
+
+  console.log(activeRow)
+  
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // const populateTable = (data) => {
-  //   console.log(data)
-  //   console.log(activeRow)
-  //   setActiveRow({data});
-  //   console.log(data)
-  //   console.log(activeRow)
-  // }
-  
+  const [open, setOpen] = React.useState(false);
+
+    const handleOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, items.length - (page - 1) * rowsPerPage);
 
@@ -205,10 +174,8 @@ export default function CustomPaginationActionsTable() {
                       color="red"
                       aria-label="add"
                       style={{ color: "white", backgroundColor: "red", boxShadow: "none", width: 36, height: 36 }}
-                      onClick={async () => {
-                        await setActiveRow(item)
-                        await setModal(true)
-                        await console.log(activeRow)
+                      onClick={() => {
+                        
                       }}
                       >
                       <Remove />
@@ -219,10 +186,13 @@ export default function CustomPaginationActionsTable() {
                       aria-label="add"
                       style={{ color: "white", backgroundColor: "#3e81ee", boxShadow: "none", width: 36, height: 36 }}
                       onClick={() => {
-                        setActiveRow({item})
-                        setModal(true)
-                        console.log(item)
-                        console.log(activeRow)
+                        setActiveRow({
+                          id: item.id,
+                          code: item.code,
+                          category: item.category.id,
+                          description: item.description,
+                        })
+                        handleOpen()
                       }}>
                       <Build />
                     </Fab>
@@ -249,105 +219,86 @@ export default function CustomPaginationActionsTable() {
         onChange={handleChangePage}
       />
 
-      {/* <Modal
+      <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
-        // style={modal}
-        open={modal}
-        onClose={
-          setModal(false)
-        }
+        className={classesModal.modal}
+        open={open}
+        onClose={handleClose}
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{
-          timeout: 500,
+            timeout: 500,
         }}
       >
-        <Fade in={modal}> */}
-          {/* <div>
-            <Card>
+        <Fade in={open}>
+            <div className={classesModal.paper} >
+              
+                <Card>
+                  <form style={{ width: 300 }}>
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom fullWidth style={{ margin: 10 }}>
+                      Edit Item
+                    </Typography>
 
-              <form style={{ width: 300 }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom fullWidth style={{ margin: 10 }}>
-                  Edit Item
-                  </Typography>
+                    
+                      <div>
+                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
+                          <InputLabel htmlFor="code">Code</InputLabel>
+                          <Input id="code" type="text" name="code" value={activeRow.code}/>
+                        </FormControl>
 
-                {!this.state.rows ? (
-                  <div>
-                    <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                      <InputLabel htmlFor="code">Code</InputLabel>
-                      <Input id="code" type="text" />
-                    </FormControl>
+                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
+                          <InputLabel htmlFor="description">Description</InputLabel>
+                          <Input id="description" type="text" name="description" value={activeRow.description}/>
+                        </FormControl>
 
-                    <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                      <InputLabel htmlFor="description">Description</InputLabel>
-                      <Input id="description" type="text" />
-                    </FormControl>
+                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
+                          <InputLabel htmlFor="group">Group</InputLabel>
+                          <Select
+                            labelId="group"
+                            id="demo-simple-select"
+                            value={activeRow.category}
+                          >
+                          
+                          {(categories).map(cat => (
+                          <MenuItem value={cat.id}>{cat.name}</MenuItem>
+                          ))}
+                          </Select>
+                        </FormControl>
 
-                    <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                      <InputLabel htmlFor="group">Group</InputLabel>
-                      <Input id="group" type="text" />
-                    </FormControl>
+                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
+                          <InputLabel htmlFor="image">Image</InputLabel>
+                          <Input id="image" multiline rows={5} />
+                        </FormControl>
+                      </div>
+                      
+                    <CardActions style={{ backgroundColor: '#3e81ee' }}>
+                      <Button variant="text" size="small" style={{ color: "#fbfbfb", }}>
+                        <Typography variant="caption" display="block" onClick={handleClose}>X Batal</Typography>
+                      </Button>
+                      <Button variant="contained" color="secondary"
+                        style={{
+                          border: "solid",
+                          borderColor: "#fbfbfb",
+                          borderRadius: 100,
+                          position: "absolute",
+                          bottom: "20%",
+                          left: "51%"
+                        }}
+                        >
 
-                    <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                      <InputLabel htmlFor="image">Image</InputLabel>
-                      <Input id="image" multiline rows={5} />
-                    </FormControl>
-                  </div>
-                ) :
-                  (this.state.rows)
-                    .map(element => {
-                      if (element.id === this.state.id) {
-                        <div>
-                          <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                            <InputLabel htmlFor="code">Code</InputLabel>
-                            <Input id="code" type="text" value={element.code} />
-                          </FormControl>
+                        <Typography variant="caption" display="block">
+                          <Build /> Simpan
+                        </Typography>
 
-                          <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                            <InputLabel htmlFor="description">Description</InputLabel>
-                            <Input id="description" type="text" value={element.description} />
-                          </FormControl>
-
-                          <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                            <InputLabel htmlFor="group">Group</InputLabel>
-                            <Input id="group" type="text" value={element.category.name} />
-                          </FormControl>
-
-                          <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                            <InputLabel htmlFor="image">Image</InputLabel>
-                            <Input id="image" multiline rows={5} />
-                          </FormControl>
-                        </div>
-                      }
-                    })}
-
-                <CardActions style={{ backgroundColor: '#3e81ee' }}>
-                  <Button variant="text" size="small" style={{ color: "#fbfbfb", }}>
-                    <Typography variant="caption" display="block" onClick={handleClose}>X Batal</Typography>
-                  </Button>
-                  <Button variant="contained" color="secondary"
-                    style={{
-                      border: "solid",
-                      borderColor: "#fbfbfb",
-                      borderRadius: 100,
-                      position: "absolute",
-                      bottom: "20%",
-                      left: "51%"
-                    }}
-                    >
-
-                    <Typography variant="caption" display="block">
-                      <Build /> Simpan
-                      </Typography>
-
-                  </Button>
-                </CardActions>
-              </form>
-            </Card>
-          </div> */}
-        {/* </Fade>
-      </Modal> */}
+                      </Button>
+                    </CardActions>
+                  </form>
+                </Card>
+              
+            </div>
+        </Fade>
+      </Modal>
     </React.Fragment>
   );
 }
