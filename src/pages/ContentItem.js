@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import ModalItem from './ModalItem';
+import useModal from './useModal';
+import { makeStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
@@ -12,41 +14,6 @@ import axios from 'axios';
 import Remove from '@material-ui/icons/Remove';
 import Build from '@material-ui/icons/Build';
 import Fab from '@material-ui/core/Fab';
-import Typography from '@material-ui/core/Typography';
-import Modal from '@material-ui/core/Modal';
-import Backdrop from '@material-ui/core/Backdrop';
-import Fade from '@material-ui/core/Fade';
-import {
-  FormControl,
-  InputLabel,
-  Input,
-  Button,
-  Card,
-  CardActions
-} from "@material-ui/core";
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-
-const useStyles1 = makeStyles((theme) => ({
-  root: {
-    flexShrink: 0,
-    marginLeft: theme.spacing(2.5),
-  },
-}));
-
-const useStylesModal = makeStyles(theme => ({
-  modal: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-  },
-  paper: {
-      backgroundColor: theme.palette.background.paper,
-      border: '2px solid #000',
-      boxShadow: theme.shadows[5],
-      padding: 0,
-  },
-}));
 
 const useStyles2 = makeStyles({
   table: {
@@ -80,9 +47,9 @@ const useStyles2 = makeStyles({
 
 export default function CustomPaginationActionsTable() {
   const rowsPerPage = 5;
+  const {isShowing, toggle} = useModal()
   const [items, setItems] = useState([])
-  const [categories, setCategories] = useState([])
-  const [activeRow, setActiveRow] = React.useState({
+  const [activeRow, setActiveRow] = useState({
     id: '',
     code: '',
     category: '',
@@ -103,40 +70,14 @@ export default function CustomPaginationActionsTable() {
       })
   }, [])
 
-  useEffect(() => {
-    axios.get("http://localhost:8080/api/categories", {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => {
-        console.log(res.data)
-        setCategories(res.data)
-      })
-      .catch(err => {
-        alert("Failed Fetching Data")
-      })
-  }, [])
-
   const classes = useStyles2();
-  const classesModal = useStylesModal();
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useState(1);
 
   console.log(activeRow)
   
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-
-  const [open, setOpen] = React.useState(false);
-
-    const handleOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, items.length - (page - 1) * rowsPerPage);
 
@@ -185,15 +126,9 @@ export default function CustomPaginationActionsTable() {
                       color="red"
                       aria-label="add"
                       style={{ color: "white", backgroundColor: "#3e81ee", boxShadow: "none", width: 36, height: 36 }}
-                      onClick={() => {
-                        setActiveRow({
-                          id: item.id,
-                          code: item.code,
-                          category: item.category.id,
-                          description: item.description,
-                        })
-                        handleOpen()
-                      }}>
+                      onClick={
+                        toggle
+                      }>
                       <Build />
                     </Fab>
 
@@ -219,86 +154,10 @@ export default function CustomPaginationActionsTable() {
         onChange={handleChangePage}
       />
 
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classesModal.modal}
-        open={open}
-        onClose={handleClose}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-            timeout: 500,
-        }}
-      >
-        <Fade in={open}>
-            <div className={classesModal.paper} >
-              
-                <Card>
-                  <form style={{ width: 300 }}>
-                    <Typography component="h2" variant="h6" color="primary" gutterBottom fullWidth style={{ margin: 10 }}>
-                      Edit Item
-                    </Typography>
-
-                    
-                      <div>
-                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                          <InputLabel htmlFor="code">Code</InputLabel>
-                          <Input id="code" type="text" name="code" value={activeRow.code}/>
-                        </FormControl>
-
-                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                          <InputLabel htmlFor="description">Description</InputLabel>
-                          <Input id="description" type="text" name="description" value={activeRow.description}/>
-                        </FormControl>
-
-                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                          <InputLabel htmlFor="group">Group</InputLabel>
-                          <Select
-                            labelId="group"
-                            id="demo-simple-select"
-                            value={activeRow.category}
-                          >
-                          
-                          {(categories).map(cat => (
-                          <MenuItem value={cat.id}>{cat.name}</MenuItem>
-                          ))}
-                          </Select>
-                        </FormControl>
-
-                        <FormControl margin="normal" fullWidth style={{ margin: 10 }}>
-                          <InputLabel htmlFor="image">Image</InputLabel>
-                          <Input id="image" multiline rows={5} />
-                        </FormControl>
-                      </div>
-                      
-                    <CardActions style={{ backgroundColor: '#3e81ee' }}>
-                      <Button variant="text" size="small" style={{ color: "#fbfbfb", }}>
-                        <Typography variant="caption" display="block" onClick={handleClose}>X Batal</Typography>
-                      </Button>
-                      <Button variant="contained" color="secondary"
-                        style={{
-                          border: "solid",
-                          borderColor: "#fbfbfb",
-                          borderRadius: 100,
-                          position: "absolute",
-                          bottom: "20%",
-                          left: "51%"
-                        }}
-                        >
-
-                        <Typography variant="caption" display="block">
-                          <Build /> Simpan
-                        </Typography>
-
-                      </Button>
-                    </CardActions>
-                  </form>
-                </Card>
-              
-            </div>
-        </Fade>
-      </Modal>
+      <ModalItem 
+        isShowing={isShowing}
+        hide={toggle}
+      />
     </React.Fragment>
   );
 }
